@@ -1,3 +1,5 @@
+from auth import authenticated
+
 from flask import Flask
 
 from datahose.config import StoreConfiguration
@@ -15,6 +17,11 @@ import time
 
 
 SETTINGS_FILE_ENV = 'DATA_SETTINGS_FILE'
+SECRET_ENV = 'DATA_APP_SECRET'
+
+
+def _get_password() -> str:
+    return os.environ.get(SECRET_ENV, 'secret')
 
 
 def _init_config() -> List[StoreConfiguration]:
@@ -34,6 +41,7 @@ svc = Hose(_init_config())
 Scheduler.start()
 
 
+@authenticated(_get_password())
 @app.route('/event', methods=['POST'])
 @use_args(EventSchema(strict=True))
 def receive_event(evt_data: dict):
@@ -44,6 +52,7 @@ def receive_event(evt_data: dict):
 
 
 @app.route('/flush', methods=['POST'])
+@authenticated(_get_password())
 def flush_all():
     svc.flush()
     return json.dumps({'flushed': True})
