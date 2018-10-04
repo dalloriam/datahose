@@ -1,7 +1,5 @@
 from dataclasses import dataclass, field
 
-from datetime import datetime
-
 from marshmallow import fields, Schema
 
 import time
@@ -19,7 +17,7 @@ class Event:
 
     @classmethod
     def from_dict(cls, d):
-        return Event(key=d['key'], body=d['body'], time=datetime.fromtimestamp(d['time']))
+        return Event(key=d['key'], body=d['body'], time=d['time'])
 
     @property
     def serialized(self) -> dict:

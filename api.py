@@ -46,7 +46,6 @@ Scheduler.start()
 @use_args(EventSchema(strict=True))
 def receive_event(evt_data: dict):
     evt = Event(**evt_data)
-    evt.time = time.time()
     svc.dispatch(evt)
     return json.dumps(evt.serialized)
 
