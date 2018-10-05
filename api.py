@@ -1,6 +1,4 @@
-from auth import authenticated
-
-from flask import Flask
+from dalloriam.api import API, authenticated
 
 from datahose.config import StoreConfiguration
 from datahose.event import EventSchema, Event
@@ -13,7 +11,6 @@ from webargs.flaskparser import use_args
 
 import os
 import json
-import time
 
 
 SETTINGS_FILE_ENV = 'DATA_SETTINGS_FILE'
@@ -36,7 +33,7 @@ def _init_config() -> List[StoreConfiguration]:
     return store_configs
 
 
-app = Flask(__name__)
+app = API(host='0.0.0.0', port=8080, debug=False)
 svc = Hose(_init_config())
 Scheduler.start()
 
@@ -59,4 +56,4 @@ def flush_all():
 
 def main():
     # TODO: Support proper config
-    app.run('0.0.0.0', 8080)
+    app.start()
