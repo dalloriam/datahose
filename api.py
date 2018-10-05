@@ -44,14 +44,14 @@ Scheduler.start()
 def receive_event(evt_data: dict):
     evt = Event(**evt_data)
     svc.dispatch(evt)
-    return json.dumps(evt.serialized)
+    return evt.serialized
 
 
 @app.route('/flush', methods=['POST'])
 @authenticated(_get_password())
 def flush_all():
     svc.flush()
-    return json.dumps({'flushed': True})
+    return {'flushed': True}
 
 
 def main():
