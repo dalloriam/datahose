@@ -1,10 +1,13 @@
 from flask import request, Response
 
+from functools import wraps
+
 import json
 
 
 def authenticated(password):
     def decorator(fn):
+        @wraps(fn)
         def internal(*args, **kwargs):
             expected = request.headers.get('AUTH', 'secret')
             if expected == password:

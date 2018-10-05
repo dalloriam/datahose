@@ -41,9 +41,9 @@ svc = Hose(_init_config())
 Scheduler.start()
 
 
-@authenticated(_get_password())
 @app.route('/event', methods=['POST'])
 @use_args(EventSchema(strict=True))
+@authenticated(_get_password())
 def receive_event(evt_data: dict):
     evt = Event(**evt_data)
     svc.dispatch(evt)
