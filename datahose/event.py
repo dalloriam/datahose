@@ -31,3 +31,4 @@ class Event:
 class EventSchema(Schema):
     key = fields.Str(required=True)
     body = fields.Dict(required=True)
+    time = fields.Float(required=False)
