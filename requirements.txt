@@ -1,4 +1,4 @@
 boto3
-dalloriam>=0.2.2
+dalloriam>=0.2.3
 marshmallow
 webargs

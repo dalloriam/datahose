@@ -28,9 +28,10 @@ class S3Store(MetricStore):
 
         Scheduler.schedule_repeat(self.flush, timedelta(minutes=1))
 
-    def flush(self) -> None:
+    def flush(self) -> int:
         # TODO: Proper logging
-        print(f'flushing cache with {len(self._buffer.keys())} keys.')
+        i = len(self._buffer.keys())
+        print(f'flushing cache with {i} keys.')
 
         for key, vals in self._buffer.items():
             current_body: str = ''
@@ -47,6 +48,7 @@ class S3Store(MetricStore):
 
         self._buffer = defaultdict(lambda: [])
         print(f'cache flush completed successfully')
+        return i
 
     def put(self, event: Event):
         self._buffer[event.key].append(event)

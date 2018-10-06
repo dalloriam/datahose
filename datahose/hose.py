@@ -15,6 +15,8 @@ class Hose:
         self._store_map = m
         self._stores = s
 
+        self.statistics: Dict[str, int] = defaultdict(lambda: 0)
+
     @staticmethod
     def _initialize_stores(stores: List[StoreConfiguration]) -> Tuple[Dict[str, List[MetricStore]], List[MetricStore]]:
         store_namespaces: Dict[str, List[MetricStore]] = defaultdict(lambda: [])
@@ -29,6 +31,8 @@ class Hose:
         return store_namespaces, ss
 
     def dispatch(self, e: Event) -> int:
+        self.statistics[e.key] += 1
+
         i = 0
         for store in self._store_map.get(e.namespace, []):
             store.put(e)
@@ -37,5 +41,6 @@ class Hose:
         return i
 
     def flush(self):
+        t = 0
         for s in self._stores:
-            s.flush()
+            t += s.flush()

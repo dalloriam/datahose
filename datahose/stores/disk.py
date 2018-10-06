@@ -15,8 +15,8 @@ class DiskStore(MetricStore):
 
         self._cache: Dict[str, Event] = {}
 
-    def flush(self):
-        pass
+    def flush(self) -> int:
+        return 0
 
     def put(self, event: Event) -> None:
         self._cache[event.key] = event

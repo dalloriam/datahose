@@ -31,7 +31,10 @@ class MetricStore(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def flush(self) -> None:
+    def flush(self) -> int:
         """
         Write pending changes.
+
+        Returns:
+            Number of keys written.
         """
