@@ -36,7 +36,7 @@ class S3Store(MetricStore):
         for key, vals in self._buffer.items():
             current_body: str = ''
             try:
-                current_body: str = self._s3.Object(self._bucket_name, self._prefix + key).get()['Body'].decode()
+                current_body: str = self._s3.Object(self._bucket_name, self._prefix + key).get()['Body'].read().decode()
             except Exception as e:
                 # TODO: Validate boto exception is 404
                 pass
@@ -59,7 +59,7 @@ class S3Store(MetricStore):
     def __getitem__(self, key: str) -> Iterator[Event]:
         try:
             lines: List[str] = self._s3.Object(self._bucket_name,
-                                                self._prefix + key).get()['Body'].decode().split('\n')
+                                                self._prefix + key).get()['Body'].read().decode().split('\n')
         except Exception as e:
             # TODO: Validate boto exception
             print(f'Got error while flushing cache: {e}')
