@@ -16,6 +16,13 @@ jobs:
           command: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
 
       - run: |
+          sudo apt-get update && sudo apt-get --only-upgrade install \
+          kubectl google-cloud-sdk google-cloud-sdk-app-engine-grpc google-cloud-sdk-pubsub-emulator \
+          google-cloud-sdk-app-engine-go google-cloud-sdk-cloud-build-local google-cloud-sdk-datastore-emulator \
+          google-cloud-sdk-app-engine-python google-cloud-sdk-cbt google-cloud-sdk-bigtable-emulator \
+          google-cloud-sdk-app-engine-python-extras google-cloud-sdk-datalab google-cloud-sdk-app-engine-java
+
+      - run: |
           gcloud --quiet components update
           gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
           gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
