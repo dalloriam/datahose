@@ -6,7 +6,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: google/cloud-sdk
+      - image: python:3.6-jessie
 
     steps:
       - checkout
@@ -16,11 +16,9 @@ jobs:
           command: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
 
       - run: |
-          apt-get update && apt-get --only-upgrade install \
-          kubectl google-cloud-sdk google-cloud-sdk-app-engine-grpc google-cloud-sdk-pubsub-emulator \
-          google-cloud-sdk-app-engine-go google-cloud-sdk-cloud-build-local google-cloud-sdk-datastore-emulator \
-          google-cloud-sdk-app-engine-python google-cloud-sdk-cbt google-cloud-sdk-bigtable-emulator \
-          google-cloud-sdk-app-engine-python-extras google-cloud-sdk-datalab google-cloud-sdk-app-engine-java
+          echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+          curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+          apt-get update && apt-get install -y google-cloud-sdk
 
       - run: |
           gcloud --quiet components update
