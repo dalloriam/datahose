@@ -16,11 +16,11 @@ jobs:
           command: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
 
       - run: |
-          sudo gcloud --quiet components update
-          sudo gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
-          sudo gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-          sudo gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
+          gcloud --quiet components update
+          gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
+          gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+          gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
 
       - run:
           name: Deploy S3 Consumer
-          command: sudo gcloud functions deploy "s3-consumer" --entry-point "s3_consume" --memory 128MB --region us-central1 --runtime python37 --trigger-topic "datahose-s3" --source "./functions/s3"
+          command: gcloud functions deploy "s3-consumer" --entry-point "s3_consume" --memory 128MB --region us-central1 --runtime python37 --trigger-topic "datahose-s3" --source "./functions/s3"
