@@ -6,7 +6,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: python:3.6-jessie
+      - image: google/cloud-sdk
 
     steps:
       - checkout
@@ -16,12 +16,6 @@ jobs:
           command: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
 
       - run: |
-          echo "deb http://packages.cloud.google.com/apt cloud-sdk-jessie main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-          curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-          apt-get update && apt-get install -y google-cloud-sdk
-
-      - run: |
-          gcloud --quiet components update
           gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
           gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
           gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
