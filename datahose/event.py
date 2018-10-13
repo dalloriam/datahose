@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 
 from marshmallow import fields, Schema
 
+import json
 import time
 
 
@@ -20,12 +21,16 @@ class Event:
         return Event(key=d['key'], body=d['body'], time=d['time'])
 
     @property
-    def serialized(self) -> dict:
+    def dict(self) -> dict:
         return {
             'key': self.key,
             'time': self.time,
             'body': self.body
         }
+
+    @property
+    def serialized(self) -> bytes:
+        return json.dumps(self.dict).encode()
 
 
 class EventSchema(Schema):

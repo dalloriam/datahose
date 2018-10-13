@@ -1,14 +1,13 @@
-from dalloriam.api import API, authenticated
+from dalloriam.api import API
 from dalloriam.notification import NotifierClient
 
-from datahose.config import StoreConfiguration
 from datahose.event import EventSchema, Event
 from datahose.hose import Hose
 from datahose.scheduler import Scheduler
 
 from datetime import timedelta
 
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 from webargs.flaskparser import use_args
 
@@ -33,20 +32,16 @@ def _get_notif_coords() -> Tuple[str, str]:
     )
 
 
-def _init_config() -> List[StoreConfiguration]:
+def _init_config() -> Dict[str, List[str]]:
     settings_file = os.environ.get(SETTINGS_FILE_ENV, '/config.json')
     with open(settings_file, 'r') as infile:
         config = json.load(infile)
 
-    store_configs: List[StoreConfiguration] = []
-    for cfg in config['stores']:
-        store_configs.append(StoreConfiguration(**cfg))
-
-    return store_configs
+    return config
 
 
 app = API(host='0.0.0.0', port=8080, debug=False)
-svc = Hose(_init_config())
+svc = Hose(os.environ.get('GCLOUD_PROJECT_NAME', 'personal-workspace'), _init_config())
 
 
 def post_statistics_digest() -> None:
@@ -68,14 +63,7 @@ def post_statistics_digest() -> None:
 def receive_event(evt_data: dict):
     evt = Event(**evt_data)
     svc.dispatch(evt)
-    return evt.serialized
-
-
-@app.route('/flush', methods=['POST'])
-@authenticated(_get_password())
-def flush_all():
-    svc.flush()
-    return {'flushed': True}
+    return evt.dict
 
 
 def main():
