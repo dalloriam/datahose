@@ -16,7 +16,7 @@ jobs:
           command: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
 
       - run: |
-          apt-get update && sudo apt-get --only-upgrade install \
+          apt-get update && apt-get --only-upgrade install \
           kubectl google-cloud-sdk google-cloud-sdk-app-engine-grpc google-cloud-sdk-pubsub-emulator \
           google-cloud-sdk-app-engine-go google-cloud-sdk-cloud-build-local google-cloud-sdk-datastore-emulator \
           google-cloud-sdk-app-engine-python google-cloud-sdk-cbt google-cloud-sdk-bigtable-emulator \
