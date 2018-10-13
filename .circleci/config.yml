@@ -6,7 +6,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: google/cloudsdk
+      - image: google/cloud-sdk
 
     steps:
       - checkout
