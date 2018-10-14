@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from marshmallow import fields, Schema
+from marshmallow import fields, Schema, post_load
 
 import json
 import time
@@ -37,3 +37,7 @@ class EventSchema(Schema):
     key = fields.Str(required=True)
     body = fields.Dict(required=True)
     time = fields.Float(required=False)
+
+    @post_load
+    def make_event(self, data) -> Event:
+        return Event(**data)

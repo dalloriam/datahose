@@ -62,12 +62,18 @@ def dispatch(request):
         Response object using
         `make_response <http://flask.pocoo.org/docs/0.12/api/#flask.Flask.make_response>`.
     """
+    secret = os.environ.get('SECRET', 'secret')
     project_name = os.environ.get('PROJECT_NAME')
     request_json = request.get_json()
+    token = request.headers.get('Authorization', 'secret')
+
+    if token != secret:
+        return '{"error": "Forbidden"}', 403
+
 
     schema = EventSchema()
     try:
-        event: Event = schema.load(request_json)
+        event: Event = schema.load(request_json).data
     except Exception:
         return '{"error": "Bad Request."}', 400
 
