@@ -53,6 +53,10 @@ def fetch_mappings() -> dict:
     return mappings
 
 
+mappings = fetch_mappings()
+publisher: pubsub_v1.PublisherClient = pubsub_v1.PublisherClient()
+
+
 def dispatch(request):
     """Responds to any HTTP request.
     Args:
@@ -70,18 +74,14 @@ def dispatch(request):
     if token != secret:
         return '{"error": "Forbidden"}', 403
 
-    schema = EventSchema()
+    schema = EventSchema(strict=True)
     try:
         event: Event = schema.load(request_json).data
     except Exception:
         return '{"error": "Bad Request."}', 400
 
-    mappings = fetch_mappings()
-
-    publisher: pubsub_v1.PublisherClient = pubsub_v1.PublisherClient()
-
-    for topic_name in mappings.get(event["key"], []):
+    for topic_name in mappings.get(event.key, []):
         topic_path = publisher.topic_path(project_name, topic_name)
-        publisher.publish(topic_path, data=json.dumps(event).encode())
+        publisher.publish(topic_path, data=event.serialized)
 
-    return json.dumps(event)
+    return json.dumps(event.dict)
