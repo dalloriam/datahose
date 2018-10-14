@@ -22,15 +22,15 @@ jobs:
 
       - run:
           name: Deploy Datastore Consumer
-          command: gcloud components deploy "datastore-consume" --entry-point "ds_consume" --memory 128MB
+          command: gcloud functions deploy "datastore-consume" --entry-point "ds_consume" --memory 128MB
             --region us-central1 --runtime python37 --trigger-topic "datahose-ds" --source "./components/datastore"
 
       - run:
           name: Deploy Telegram Notifier
-          command: gcloud components deploy "telegram-consume" --entry-point "telegram_send" --memory 128MB
+          command: gcloud functions deploy "telegram-consume" --entry-point "telegram_send" --memory 128MB
             --region us-central1 --runtime python37 --trigger-topic "notifications" --source "./components/telegram"
 
       - run:
           name: Deploy Dispatcher
-          command: gcloud components deploy "datahose" --entry-point "dispatch" --memory 128MB
+          command: gcloud functions deploy "datahose" --entry-point "dispatch" --memory 128MB
             --region us-central1 --runtime python37 --trigger-http --source "./components/dispatch"
