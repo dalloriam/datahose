@@ -70,7 +70,6 @@ def dispatch(request):
     if token != secret:
         return '{"error": "Forbidden"}', 403
 
-
     schema = EventSchema()
     try:
         event: Event = schema.load(request_json).data
@@ -81,8 +80,8 @@ def dispatch(request):
 
     publisher: pubsub_v1.PublisherClient = pubsub_v1.PublisherClient()
 
-    for topic_name in mappings.get(event.key, []):
+    for topic_name in mappings.get(event["key"], []):
         topic_path = publisher.topic_path(project_name, topic_name)
-        publisher.publish(topic_path, data=event.serialized)
+        publisher.publish(topic_path, data=json.dumps(event).encode())
 
-    return json.dumps(event.dict)
+    return json.dumps(event)
