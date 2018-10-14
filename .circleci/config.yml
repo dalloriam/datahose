@@ -29,4 +29,3 @@ jobs:
           name: Deploy Telegram Notifier
           command: gcloud functions deploy "telegram-consume" --entry-point "telegram_send" --memory 128MB
             --region us-central1 --runtime python37 --trigger-topic "notifications" --source "./functions/telegram"
-            --set-env-vars BOT_KEY="${BOT_KEY}",CONVERSATION_ID="${CONVERSATION_ID}"
