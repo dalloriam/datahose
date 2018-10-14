@@ -24,3 +24,9 @@ jobs:
           name: Deploy Datastore Consumer
           command: gcloud functions deploy "datastore-consume" --entry-point "ds_consume" --memory 128MB
             --region us-central1 --runtime python37 --trigger-topic "datahose-ds" --source "./functions/datastore"
+
+      - run:
+          name: Deploy Telegram Notifier
+          command: gcloud functions deploy "telegram-consume" --entry-point "telegram_send" --memory 128MB
+            --region us-central1 --runtime python37 --trigger-topic "notification" --source "./functions/telegram"
+            --set-env-vars BOT_KEY=${BOT_KEY},CONVERSATION_ID=${CONVERSATION_ID}
