@@ -29,3 +29,8 @@ jobs:
           name: Deploy Telegram Notifier
           command: gcloud functions deploy "telegram-consume" --entry-point "telegram_send" --memory 128MB
             --region us-central1 --runtime python37 --trigger-topic "notifications" --source "./functions/telegram"
+
+      - run:
+          name: Deploy Dispatcher
+          command: gcloud functions deploy "datahose" --entry-point "dispatch" --memory 128MB
+            --region us-central1 --runtime python37 --trigger-http --source "./functions/dispatch"
