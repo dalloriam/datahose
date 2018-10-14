@@ -1,2 +1,2 @@
-# datahub
-Flexible data analytics pltform
+# DataHose
+Cloud-based personal data collection system.

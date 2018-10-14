@@ -27,7 +27,7 @@ def telegram_send(event, context):
     """Triggered from a message on a Cloud Pub/Sub topic.
     Args:
          event (dict): Event payload.
-         context (google.cloud.functions.Context): Metadata for the event.
+         context (google.cloud.components.Context): Metadata for the event.
     """
     evt = json.loads(base64.b64decode(event['data']).decode('utf-8'))
     send_message(evt['body'])
