@@ -80,7 +80,7 @@ def dispatch(request):
     except Exception:
         return '{"error": "Bad Request."}', 400
 
-    for topic_name in mappings.get(event.key, []):
+    for topic_name in mappings.get(event.namespace, []):
         topic_path = publisher.topic_path(project_name, topic_name)
         publisher.publish(topic_path, data=event.serialized)
 
