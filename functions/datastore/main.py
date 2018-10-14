@@ -14,10 +14,10 @@ def ds_consume(event, context):
 
     evt = json.loads(base64.b64decode(event['data']).decode('utf-8'))
 
-    key = ds.key('Event')
+    key = ds.key(f'Event-{evt["key"]}')
 
     entity = datastore.Entity(key=key)
-    entity.update(evt)
+    entity.update({**evt['body'], 'key': evt['key'], 'time': evt['time']})
     ds.put(entity)
 
     print(f'Processed event  [{evt["key"]}].')
