@@ -17,6 +17,7 @@ def ds_consume(event, context):
     key = ds.key('Event')
 
     entity = datastore.Entity(key=key)
+    entity.update(evt)
     ds.put(entity)
 
     print(f'Processed event  [{evt["key"]}].')
