@@ -4,6 +4,8 @@ from google.cloud import storage, pubsub_v1
 
 from marshmallow import fields, Schema, post_load
 
+from typing import Optional
+
 import json
 import os
 import time
@@ -69,7 +71,14 @@ def dispatch(request):
     secret = os.environ.get('SECRET', 'secret')
     project_name = os.environ.get('PROJECT_NAME')
     request_json = request.get_json()
-    token = request.headers.get('Authorization', 'secret')
+
+    if 'Authorization' in request.headers:
+        token = request.headers.get('Authorization')
+    elif 'auth' in request_json:
+        token = request_json['auth']
+        del request_json['auth']
+    else:
+        token = 'secret'
 
     if token != secret:
         return '{"error": "Forbidden"}', 403
