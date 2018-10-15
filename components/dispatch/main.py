@@ -87,6 +87,7 @@ def dispatch(request):
     try:
         event: Event = schema.load(request_json).data
     except Exception:
+        print(f'Got bad request: [{request_json}]')
         return '{"error": "Bad Request."}', 400
 
     for topic_name in mappings.get(event.namespace, []):
