@@ -4,11 +4,13 @@ from google.cloud import storage, pubsub_v1
 
 from marshmallow import fields, Schema, post_load
 
-from typing import Optional
-
 import json
 import os
+import requests
 import time
+
+
+KEY_BLACKLIST = ['notification']
 
 
 @dataclass
@@ -55,6 +57,10 @@ def fetch_mappings() -> dict:
     return mappings
 
 
+def push_event_key(event_key: str) -> None:
+    requests.post(os.environ.get('STATISTICS_HOOK'), json={'key': event_key})
+
+
 mappings = fetch_mappings()
 publisher: pubsub_v1.PublisherClient = pubsub_v1.PublisherClient()
 
@@ -93,5 +99,9 @@ def dispatch(request):
     for topic_name in mappings.get(event.namespace, []):
         topic_path = publisher.topic_path(project_name, topic_name)
         publisher.publish(topic_path, data=event.serialized)
+
+    if all(not event.namespace.startswith(x) for x in KEY_BLACKLIST):
+        print(f'Sending event [{event.key}] to statistics.')
+        push_event_key(event.key)
 
     return json.dumps(event.dict)
