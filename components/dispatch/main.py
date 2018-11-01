@@ -12,7 +12,7 @@ import requests
 import time
 
 
-KEY_BLACKLIST = ['notification']
+KEY_BLACKLIST = ['notification.report']
 
 
 @dataclass
