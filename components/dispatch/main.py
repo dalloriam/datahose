@@ -1,5 +1,7 @@
 from dataclasses import dataclass, field
 
+from flask import Response
+
 from google.cloud import storage, pubsub_v1
 
 from marshmallow import fields, Schema, post_load
@@ -104,4 +106,4 @@ def dispatch(request):
         print(f'Sending event [{event.key}] to statistics.')
         push_event_key(event.key)
 
-    return json.dumps(event.dict)
+    return Response(json.dumps(event.dict), content_type='application/json')
