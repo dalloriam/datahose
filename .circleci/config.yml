@@ -34,3 +34,8 @@ jobs:
           name: Deploy Dispatcher
           command: gcloud functions deploy "datahose" --entry-point "dispatch" --memory 128MB
             --region us-central1 --runtime python37 --trigger-http --source "./components/dispatch"
+
+      - run:
+          name: Deploy Dataset Generator
+          command: gcloud functions deploy "dataset-gen" --entry-point "generate_dataset" --memory 128MB
+            --region us-central1 --runtime python37 --trigger-http --source "./components/dataset_generator"

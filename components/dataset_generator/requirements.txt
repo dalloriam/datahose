@@ -1,0 +1,9 @@
+google-cloud-datastore
+google-cloud-storage
+dask
+gcsfs
+pandas
+marshmallow
+pandas
+requests
+toolz
