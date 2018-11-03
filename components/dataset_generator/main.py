@@ -1,8 +1,13 @@
+from flask import Request, Response
+
 from google.cloud import datastore
+
+from http import HTTPStatus
 
 from typing import List, Optional
 
 import gcsfs
+import json
 import os
 import pandas as pd
 
@@ -68,9 +73,16 @@ class DatasetUpdater:
                 df.to_csv(outfile)
 
 
-def generate_dataset() -> None:
+def generate_dataset(request: Request):
     project_name = os.environ.get('PROJECT_NAME')
     bucket_name = os.environ.get('BUCKET_NAME')
 
-    updater = DatasetUpdater(project_name, bucket_name)
-    updater.update_datasets()
+    try:
+        updater = DatasetUpdater(project_name, bucket_name)
+        updater.update_datasets()
+    except Exception as e:
+        return Response(
+            response=json.dumps({'error': str(e)}),
+            content_type='application/json'), HTTPStatus.INTERNAL_SERVER_ERROR
+
+    return Response(response=json.dumps({'message': 'ok'}), content_type='application/json'), HTTPStatus.OK
