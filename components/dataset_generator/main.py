@@ -65,7 +65,9 @@ class DatasetUpdater:
                     break
                 offset += len(out)
 
-            df = pd.DataFrame(hits) if existing_dataframe is None else existing_dataframe.append(pd.DataFrame(hits))
+            df = pd.DataFrame([
+                {k: v for k, v in hit.items()} for hit in hits
+            ]) if existing_dataframe is None else existing_dataframe.append(pd.DataFrame(hits))
             print(f'Added {len(hits)} rows to dataset [{kind}].')
 
             # Write the appended dataset to file.
