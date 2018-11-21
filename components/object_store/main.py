@@ -1,5 +1,6 @@
 from google.cloud import storage
 
+import base64
 import json
 import os
 import zlib
@@ -14,11 +15,13 @@ def obj_consume(event, context):
     bucket_name = os.environ.get('BUCKET_NAME')
     storage_client = storage.Client()
 
-    obj_id = event['key'].split('.', 1)[-1]
+    evt = json.loads(base64.b64decode(event['data']).decode('utf-8'))
+
+    obj_id = evt['key'].split('.', 1)[-1]
 
     bucket = storage_client.get_bucket(bucket_name)
     bucket.blob(obj_id).upload_from_string(
-        zlib.compress(json.dumps(event['body']).encode()),
+        zlib.compress(json.dumps(evt['body']).encode()),
         content_type='application/zip'
     )
 
