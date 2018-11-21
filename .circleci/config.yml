@@ -21,6 +21,11 @@ jobs:
           gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
 
       - run:
+          name: Deploy Object Store Consumer
+          command: gcloud functions deploy "object-store-consume" --entry-point "obj_consume" --memory 128MB
+            --region us-central1 --runtime python37 --trigger-topic "obj-ds" --source "./components/object_store"
+
+      - run:
           name: Deploy Datastore Consumer
           command: gcloud functions deploy "datastore-consume" --entry-point "ds_consume" --memory 128MB
             --region us-central1 --runtime python37 --trigger-topic "datahose-ds" --source "./components/datastore"
