@@ -44,35 +44,37 @@ class DatasetUpdater:
         query = self.ds.query(kind='__kind__')
         return [x.key.name for x in query.fetch() if not x.key.name.startswith('_')]
 
+    def update_dataset(self, kind: str):
+        existing_dataframe = self._try_load_dataset(kind)
+
+        query = self.ds.query(kind=kind)
+
+        if existing_dataframe is not None and 'time' in existing_dataframe:
+            query.add_filter('time', '>', existing_dataframe['time'].max())
+
+        offset = 0
+        hits = []
+        while True:
+            out = list(query.fetch(limit=DatasetUpdater._SCROLL_BUF_SIZE, offset=offset))
+            hits += out
+            if len(out) < DatasetUpdater._SCROLL_BUF_SIZE:
+                break
+            offset += len(out)
+
+        cleaned_hits = [{k: v for k, v in hit.items() if k} for hit in hits]
+        df = pd.DataFrame(cleaned_hits) if existing_dataframe is None else existing_dataframe.append(pd.DataFrame(cleaned_hits))
+        print(f'Added {len(hits)} rows to dataset [{kind}].')
+
+        # Write the appended dataset to file.
+        with self.fs.open(self._get_kind_path(kind), 'w') as outfile:
+            df.to_csv(outfile, index=False)
+
     def update_datasets(self) -> None:
         """
         Updates all datasets with last added rows.
         """
         for kind in self.fetch_all_kinds():
-            existing_dataframe = self._try_load_dataset(kind)
-
-            query = self.ds.query(kind=kind)
-
-            if existing_dataframe is not None and 'time' in existing_dataframe:
-                query.add_filter('time', '>', existing_dataframe['time'].max())
-
-            offset = 0
-            hits = []
-            while True:
-                out = list(query.fetch(limit=DatasetUpdater._SCROLL_BUF_SIZE, offset=offset))
-                hits += out
-                if len(out) < DatasetUpdater._SCROLL_BUF_SIZE:
-                    break
-                offset += len(out)
-
-            df = pd.DataFrame([
-                {k: v for k, v in hit.items()} for hit in hits
-            ]) if existing_dataframe is None else existing_dataframe.append(pd.DataFrame(hits))
-            print(f'Added {len(hits)} rows to dataset [{kind}].')
-
-            # Write the appended dataset to file.
-            with self.fs.open(self._get_kind_path(kind), 'w') as outfile:
-                df.to_csv(outfile)
+            self.update_dataset(kind)
 
 
 def generate_dataset(request: Request):
