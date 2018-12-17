@@ -110,7 +110,7 @@ def dispatch_update_results(update_results: Dict[str, int]) -> None:
     )
 
 
-def generate_dataset(request: Request):
+def generate_dataset(event, context):
     project_name = os.environ.get('PROJECT_NAME')
     bucket_name = os.environ.get('BUCKET_NAME')
 
