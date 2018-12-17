@@ -1,5 +1,6 @@
 google-cloud-datastore
 google-cloud-storage
+dalloriam>=0.4.5
 dask
 gcsfs
 pandas

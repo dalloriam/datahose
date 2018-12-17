@@ -1,10 +1,12 @@
+from dalloriam.datahose import DatahoseClient
+
 from flask import Request, Response
 
 from google.cloud import datastore
 
 from http import HTTPStatus
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import gcsfs
 import json
@@ -44,7 +46,15 @@ class DatasetUpdater:
         query = self.ds.query(kind='__kind__')
         return [x.key.name for x in query.fetch() if not x.key.name.startswith('_')]
 
-    def update_dataset(self, kind: str):
+    def update_dataset(self, kind: str) -> int:
+        """
+        Updates a single dataset for a given kind.
+        Args:
+            kind (str): Datastore kind.
+
+        Returns:
+            The number of new rows since the last update.
+        """
         existing_dataframe = self._try_load_dataset(kind)
 
         query = self.ds.query(kind=kind)
@@ -69,12 +79,35 @@ class DatasetUpdater:
         with self.fs.open(self._get_kind_path(kind), 'w') as outfile:
             df.to_csv(outfile, index=False)
 
-    def update_datasets(self) -> None:
+        return len(hits)
+
+    def update_datasets(self) -> Dict[str, int]:
         """
         Updates all datasets with last added rows.
+
+        Returns:
+            The dictionary of updated items.
         """
-        for kind in self.fetch_all_kinds():
-            self.update_dataset(kind)
+        return {
+            kind: self.update_dataset(kind)
+            for kind in self.fetch_all_kinds()
+        }
+
+
+def dispatch_update_results(update_results: Dict[str, int]) -> None:
+    stats_lst = [f'  - `{event_key}`: {val}' for event_key, val in update_results.items() if val != 0]
+
+    if not stats_lst:
+        return
+
+    datahose = DatahoseClient(
+        service_host=os.environ.get('DATAHOSE_HOST'),
+        password=os.environ.get('DATAHOSE_PASSWORD')
+    )
+    datahose.notify(
+        sender="Event Report",
+        message='Since last report: \n\n' + '\n'.join(stats_lst)
+    )
 
 
 def generate_dataset(request: Request):
@@ -83,7 +116,8 @@ def generate_dataset(request: Request):
 
     try:
         updater = DatasetUpdater(project_name, bucket_name)
-        updater.update_datasets()
+        update_results = updater.update_datasets()
+        dispatch_update_results(update_results)
     except Exception as e:
         return Response(
             response=json.dumps({'error': str(e)}),

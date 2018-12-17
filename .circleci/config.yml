@@ -43,4 +43,4 @@ jobs:
       - run:
           name: Deploy Dataset Generator
           command: gcloud functions deploy "dataset-gen" --entry-point "generate_dataset" --memory 128MB
-            --region us-central1 --runtime python37 --trigger-http --source "./components/dataset_generator"
+            --region us-central1 --runtime python37 --trigger-topic "datasets" --source "./components/dataset_generator"
