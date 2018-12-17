@@ -72,7 +72,11 @@ class DatasetUpdater:
             offset += len(out)
 
         cleaned_hits = [{k: v for k, v in hit.items() if k} for hit in hits]
-        df = pd.DataFrame(cleaned_hits) if existing_dataframe is None else existing_dataframe.append(pd.DataFrame(cleaned_hits))
+        if existing_dataframe is None:
+            df = pd.DataFrame(cleaned_hits)
+        else:
+            df = existing_dataframe.append(pd.DataFrame(cleaned_hits), sort=True)
+
         print(f'Added {len(hits)} rows to dataset [{kind}].')
 
         # Write the appended dataset to file.
