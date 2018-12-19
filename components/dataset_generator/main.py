@@ -1,12 +1,12 @@
 from dalloriam.datahose import DatahoseClient
 
-from flask import Request, Response
+from flask import Response
 
 from google.cloud import datastore
 
 from http import HTTPStatus
 
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import gcsfs
 import json
@@ -46,6 +46,23 @@ class DatasetUpdater:
         query = self.ds.query(kind='__kind__')
         return [x.key.name for x in query.fetch() if not x.key.name.startswith('_')]
 
+    def _fetch_hits(self, kind: str, time_since_last_event: Optional[float]) -> List[Dict[str, Any]]:
+        query = self.ds.query(kind=kind)
+
+        if time_since_last_event is not None:
+            query.add_filter('time', '>', time_since_last_event)
+
+        offset = 0
+        hits = []
+        while True:
+            out = list(query.fetch(limit=DatasetUpdater._SCROLL_BUF_SIZE, offset=offset))
+            hits += out
+            if len(out) < DatasetUpdater._SCROLL_BUF_SIZE:
+                break
+            offset += len(out)
+
+        return [{k: v for k, v in hit.items() if k} for hit in hits]
+
     def update_dataset(self, kind: str) -> int:
         """
         Updates a single dataset for a given kind.
@@ -57,33 +74,23 @@ class DatasetUpdater:
         """
         existing_dataframe = self._try_load_dataset(kind)
 
-        query = self.ds.query(kind=kind)
+        cleaned_hits = self._fetch_hits(
+            kind,
+            existing_dataframe['time'].max()
+            if existing_dataframe is not None and 'time' in existing_dataframe else None)
 
-        if existing_dataframe is not None and 'time' in existing_dataframe:
-            query.add_filter('time', '>', existing_dataframe['time'].max())
-
-        offset = 0
-        hits = []
-        while True:
-            out = list(query.fetch(limit=DatasetUpdater._SCROLL_BUF_SIZE, offset=offset))
-            hits += out
-            if len(out) < DatasetUpdater._SCROLL_BUF_SIZE:
-                break
-            offset += len(out)
-
-        cleaned_hits = [{k: v for k, v in hit.items() if k} for hit in hits]
         if existing_dataframe is None:
             df = pd.DataFrame(cleaned_hits)
         else:
             df = existing_dataframe.append(pd.DataFrame(cleaned_hits), sort=True)
 
-        print(f'Added {len(hits)} rows to dataset [{kind}].')
+        print(f'Added {len(cleaned_hits)} rows to dataset [{kind}].')
 
         # Write the appended dataset to file.
         with self.fs.open(self._get_kind_path(kind), 'w') as outfile:
             df.to_csv(outfile, index=False)
 
-        return len(hits)
+        return len(cleaned_hits)
 
     def update_datasets(self) -> Dict[str, int]:
         """
