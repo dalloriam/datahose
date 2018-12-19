@@ -50,7 +50,7 @@ class DatasetUpdater:
         query = self.ds.query(kind=kind)
 
         if time_since_last_event is not None:
-            query.add_filter('time', '>', time_since_last_event)
+            query.add_filter('time', '>', round(time_since_last_event, 2))
 
         offset = 0
         hits = []
