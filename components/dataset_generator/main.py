@@ -45,7 +45,7 @@ class DatasetUpdater:
         query = self.ds.query(kind=kind)
 
         if time_since_last_event is not None:
-            query.add_filter('time', '>', round(time_since_last_event))
+            query.add_filter('time', '>', time_since_last_event)
 
         offset = 0
         hits = []
@@ -82,8 +82,9 @@ class DatasetUpdater:
         print(f'Added {len(cleaned_hits)} rows to dataset [{kind}].')
 
         # Write the appended dataset to file.
-        with self.fs.open(self._get_kind_path(kind), 'w') as outfile:
-            df.to_csv(outfile, index=False)
+        if len(cleaned_hits) > 0:
+            with self.fs.open(self._get_kind_path(kind), 'w') as outfile:
+                df.to_csv(outfile, index=False)
 
         return len(cleaned_hits)
 
