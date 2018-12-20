@@ -1,5 +1,7 @@
 from google.cloud import datastore, error_reporting
 
+from datetime import datetime
+
 import base64
 import json
 
@@ -19,7 +21,7 @@ def ds_consume(event, context):
         key = ds.key(f'Event-{evt["key"]}')
 
         entity = datastore.Entity(key=key)
-        entity.update({**evt['body'], 'key': evt['key'], 'time': evt['time']})
+        entity.update({**evt['body'], 'key': evt['key'], 'time': datetime.fromtimestamp(evt['time'])})
         ds.put(entity)
 
         print(f'Processed event  [{evt["key"]}].')
