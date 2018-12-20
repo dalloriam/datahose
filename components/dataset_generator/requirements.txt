@@ -1,4 +1,5 @@
 google-cloud-datastore
+google-cloud-error-reporting
 google-cloud-storage
 dalloriam>=0.4.5
 dask

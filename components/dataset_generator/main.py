@@ -2,7 +2,7 @@ from dalloriam.datahose import DatahoseClient
 
 from flask import Response
 
-from google.cloud import datastore
+from google.cloud import datastore, error_reporting
 
 from http import HTTPStatus
 
@@ -125,13 +125,13 @@ def generate_dataset(event, context):
     project_name = os.environ.get('PROJECT_NAME')
     bucket_name = os.environ.get('BUCKET_NAME')
 
+    client = error_reporting.Client()
+
     try:
         updater = DatasetUpdater(project_name, bucket_name)
         update_results = updater.update_datasets()
         dispatch_update_results(update_results)
-    except Exception as e:
-        return Response(
-            response=json.dumps({'error': str(e)}),
-            content_type='application/json'), HTTPStatus.INTERNAL_SERVER_ERROR
+    except Exception:
+        client.report_exception()
 
-    return Response(response=json.dumps({'message': 'ok'}), content_type='application/json'), HTTPStatus.OK
+    print('Dataset update completed successfully')
