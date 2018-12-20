@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 
 from flask import Response
 
-from google.cloud import storage, pubsub_v1
+from google.cloud import error_reporting, storage, pubsub_v1
 
 from marshmallow import fields, Schema, post_load
 
@@ -70,28 +70,33 @@ def dispatch(request):
     """
     secret = os.environ.get('SECRET', 'secret')
     project_name = os.environ.get('PROJECT_NAME')
-    request_json = request.get_json()
 
-    if 'Authorization' in request.headers:
-        token = request.headers.get('Authorization')
-    elif 'auth' in request_json:
-        token = request_json['auth']
-        del request_json['auth']
-    else:
-        token = 'secret'
-
-    if token != secret:
-        return '{"error": "Forbidden"}', 403
-
-    schema = EventSchema(strict=True)
+    client = error_reporting.Client()
     try:
-        event: Event = schema.load(request_json).data
-    except Exception:
-        print(f'Got bad request: [{request_json}]')
-        return '{"error": "Bad Request."}', 400
+        request_json = request.get_json()
 
-    for topic_name in mappings.get(event.namespace, []):
-        topic_path = publisher.topic_path(project_name, topic_name)
-        publisher.publish(topic_path, data=event.serialized)
+        if 'Authorization' in request.headers:
+            token = request.headers.get('Authorization')
+        elif 'auth' in request_json:
+            token = request_json['auth']
+            del request_json['auth']
+        else:
+            token = 'secret'
+
+        if token != secret:
+            return '{"error": "Forbidden"}', 403
+
+        schema = EventSchema(strict=True)
+        try:
+            event: Event = schema.load(request_json).data
+        except Exception:
+            print(f'Got bad request: [{request_json}]')
+            return '{"error": "Bad Request."}', 400
+
+        for topic_name in mappings.get(event.namespace, []):
+            topic_path = publisher.topic_path(project_name, topic_name)
+            publisher.publish(topic_path, data=event.serialized)
+    except Exception:
+        client.report_exception()
 
     return Response(json.dumps(event.dict), content_type='application/json')

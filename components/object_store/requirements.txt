@@ -1,1 +1,2 @@
+google-cloud-error-reporting
 google-cloud-storage

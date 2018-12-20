@@ -1,3 +1,4 @@
-google-cloud-storage
+google-cloud-error-reporting
 google-cloud-pubsub
+google-cloud-storage
 marshmallow

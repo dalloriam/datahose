@@ -1,4 +1,4 @@
-from google.cloud import storage
+from google.cloud import error_reporting, storage
 
 import base64
 import json
@@ -13,16 +13,21 @@ def obj_consume(event, context):
          context (google.cloud.components.Context): Metadata for the event.
     """
     bucket_name = os.environ.get('BUCKET_NAME')
-    storage_client = storage.Client()
+    client = error_reporting.Client()
 
-    evt = json.loads(base64.b64decode(event['data']).decode('utf-8'))
+    try:
+        storage_client = storage.Client()
 
-    obj_id = evt['key'].split('.', 1)[-1]
+        evt = json.loads(base64.b64decode(event['data']).decode('utf-8'))
 
-    bucket = storage_client.get_bucket(bucket_name)
-    bucket.blob(obj_id).upload_from_string(
-        zlib.compress(json.dumps(evt['body']).encode()),
-        content_type='application/zip'
-    )
+        obj_id = evt['key'].split('.', 1)[-1]
 
-    print(f'Uploaded archive [{obj_id}]')
+        bucket = storage_client.get_bucket(bucket_name)
+        bucket.blob(obj_id).upload_from_string(
+            zlib.compress(json.dumps(evt['body']).encode()),
+            content_type='application/zip'
+        )
+
+        print(f'Uploaded archive [{obj_id}]')
+    except Exception:
+        client.report_exception()

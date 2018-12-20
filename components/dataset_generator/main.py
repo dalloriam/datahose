@@ -1,15 +1,10 @@
 from dalloriam.datahose import DatahoseClient
 
-from flask import Response
-
 from google.cloud import datastore, error_reporting
-
-from http import HTTPStatus
 
 from typing import Any, Dict, List, Optional
 
 import gcsfs
-import json
 import os
 import pandas as pd
 
@@ -50,7 +45,7 @@ class DatasetUpdater:
         query = self.ds.query(kind=kind)
 
         if time_since_last_event is not None:
-            query.add_filter('time', '>', round(time_since_last_event, 2))
+            query.add_filter('time', '>', round(time_since_last_event))
 
         offset = 0
         hits = []

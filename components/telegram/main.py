@@ -1,3 +1,6 @@
+from google.cloud import error_reporting
+
+
 import base64
 import json
 import requests
@@ -29,6 +32,11 @@ def telegram_send(event, context):
          event (dict): Event payload.
          context (google.cloud.components.Context): Metadata for the event.
     """
-    evt = json.loads(base64.b64decode(event['data']).decode('utf-8'))
-    send_message(evt['body'])
-    print(f'Sent message to [{os.environ.get("CONVERSATION_ID")}]')
+    client = error_reporting.Client()
+
+    try:
+        evt = json.loads(base64.b64decode(event['data']).decode('utf-8'))
+        send_message(evt['body'])
+        print(f'Sent message to [{os.environ.get("CONVERSATION_ID")}]')
+    except Exception:
+        client.report_exception()
