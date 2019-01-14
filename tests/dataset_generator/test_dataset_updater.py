@@ -1,5 +1,7 @@
 from components.dataset_generator.main import DatasetUpdater
 
+from dateutil import parser
+
 from tests.utils.query_mock import QueryMock, ObjectMock
 
 from typing import Any, Dict, List, Optional
@@ -75,10 +77,17 @@ def test_dataset_updater_fetch_all_kinds(query_keys: List[str], expected_kinds: 
 
         # case with filter
         (
-            [{'key': 'item1', 'time': 42}, {'key': 'item2', 'time': 41}, {'key': 'item3', 'time': 43}],
-            41,
+            [
+                {'key': 'item1', 'time': parser.parse('2018-12-16 22:11:53.253675+00:00')},
+                {'key': 'item2', 'time': parser.parse('2018-12-16 22:12:53.253675+00:00')},
+                {'key': 'item3', 'time': parser.parse('2018-12-16 22:13:53.253675+00:00')}
+            ],
+            '2018-12-16 22:11:53.253675+00:00',
             None,
-            [{'time': 42}, {'time': 43}]
+            [
+                {'time': parser.parse('2018-12-16 22:12:53.253675+00:00')},
+                {'time': parser.parse('2018-12-16 22:13:53.253675+00:00')}
+            ]
         )
     ]
 )
