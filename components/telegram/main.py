@@ -1,4 +1,4 @@
-from google.cloud import error_reporting
+from google.cloud import error_reporting, storage
 
 
 import base64
@@ -7,13 +7,27 @@ import requests
 import os
 
 
+def fetch_config() -> dict:
+    bucket_name = os.environ.get('CONFIG_BUCKET_NAME')
+    storage_client = storage.Client()
+
+    bucket = storage_client.get_bucket(bucket_name)
+    config_blob = bucket.get_blob('services/datahose.json')
+    config = json.loads(config_blob.download_as_string())
+
+    return config
+
+
+config = fetch_config()
+
+
 def _format(notification: dict) -> str:
     return f'*{notification.get("sender", "Unknown")}* - {notification["message"]}'
 
 
 def send_message(body: dict):
-    bot_key = os.environ.get('BOT_KEY')
-    conv_id = os.environ.get('CONVERSATION_ID')
+    bot_key = config['telegram_notifier']['bot_key']
+    conv_id = config['telegram_notifier']['conversation_id']
 
     formatted = _format(body)
     requests.post(
@@ -37,6 +51,6 @@ def telegram_send(event, context):
     try:
         evt = json.loads(base64.b64decode(event['data']).decode('utf-8'))
         send_message(evt['body'])
-        print(f'Sent message to [{os.environ.get("CONVERSATION_ID")}]')
+        print(f'Sent message to [{config["telegram_notifier"]["conversation_id"]}]')
     except Exception:
         client.report_exception()
