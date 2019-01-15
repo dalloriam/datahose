@@ -8,6 +8,6 @@ action "Aggregate Requirements" {
 }
 
 action "Run Tests" {
-  uses = "dalloriam/actions/python/pytest@master"
+  uses = "./actions/run_tests"
   needs = ["Aggregate Requirements"]
 }
