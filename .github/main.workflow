@@ -20,7 +20,6 @@ action "Run Tests" {
 action "Deploy Object Store" {
   needs = ["Run Tests", "Initialize GCP"]
   uses = "actions/gcloud/cli@master"
-  runs = "sh -c"
   env = {
     PROJECT_ID = "personal-workspace"
   }
@@ -30,7 +29,6 @@ action "Deploy Object Store" {
 action "Deploy Datastore Consumer" {
   needs = ["Run Tests", "Initialize GCP"]
   uses = "actions/gcloud/cli@master"
-  runs = "sh -c"
   env = {
     PROJECT_ID = "personal-workspace"
   }
@@ -41,7 +39,6 @@ action "Deploy Datastore Consumer" {
 action "Deploy Dispatcher" {
   needs = ["Deploy Object Store", "Deploy Datastore Consumer"]
   uses = "actions/gcloud/cli@master"
-  runs = "sh -c"
   env = {
     PROJECT_ID = "personal-workspace"
   }
