@@ -2,13 +2,28 @@ from dalloriam.datahose import DatahoseClient
 
 from dateutil import parser
 
-from google.cloud import datastore, error_reporting
+from google.cloud import datastore, error_reporting, storage
 
 from typing import Any, Dict, List, Optional
 
 import gcsfs
+import json
 import os
 import pandas as pd
+
+
+def fetch_config() -> dict:
+    bucket_name = os.environ.get('CONFIG_BUCKET_NAME')
+    storage_client = storage.Client()
+
+    bucket = storage_client.get_bucket(bucket_name)
+    config_blob = bucket.get_blob('services/datahose.json')
+    config = json.loads(config_blob.download_as_string())
+
+    return config
+
+
+config = fetch_config()
 
 
 class DatasetUpdater:
@@ -110,8 +125,8 @@ def dispatch_update_results(update_results: Dict[str, int]) -> None:
         return
 
     datahose = DatahoseClient(
-        service_host=os.environ.get('DATAHOSE_HOST'),
-        password=os.environ.get('DATAHOSE_PASSWORD')
+        service_host=config['host_information']['host'],
+        password=config['host_information']['password']
     )
     datahose.notify(
         sender="Event Report",
@@ -121,7 +136,7 @@ def dispatch_update_results(update_results: Dict[str, int]) -> None:
 
 def generate_dataset(event, context):
     project_name = os.environ.get('PROJECT_NAME')
-    bucket_name = os.environ.get('BUCKET_NAME')
+    bucket_name = config['buckets']['datasets']
 
     client = error_reporting.Client()
 
