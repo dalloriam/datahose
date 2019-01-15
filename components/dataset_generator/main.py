@@ -23,9 +23,6 @@ def fetch_config() -> dict:
     return config
 
 
-config = fetch_config()
-
-
 class DatasetUpdater:
 
     _SCROLL_BUF_SIZE = 50
@@ -118,15 +115,15 @@ class DatasetUpdater:
         }
 
 
-def dispatch_update_results(update_results: Dict[str, int]) -> None:
+def dispatch_update_results(update_results: Dict[str, int], host: str, password: str) -> None:
     stats_lst = [f'  - `{event_key}`: {val}' for event_key, val in update_results.items() if val != 0]
 
     if not stats_lst:
         return
 
     datahose = DatahoseClient(
-        service_host=config['host_information']['host'],
-        password=config['host_information']['password']
+        service_host=host,
+        password=password
     )
     datahose.notify(
         sender="Event Report",
@@ -135,6 +132,7 @@ def dispatch_update_results(update_results: Dict[str, int]) -> None:
 
 
 def generate_dataset(event, context):
+    config = fetch_config()
     project_name = os.environ.get('PROJECT_NAME')
     bucket_name = config['buckets']['datasets']
 
@@ -143,7 +141,11 @@ def generate_dataset(event, context):
     try:
         updater = DatasetUpdater(project_name, bucket_name)
         update_results = updater.update_datasets()
-        dispatch_update_results(update_results)
+        dispatch_update_results(
+            update_results,
+            config['host_information']['host'],
+            config['host_information']['password']
+        )
     except Exception:
         client.report_exception()
 
