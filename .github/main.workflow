@@ -23,7 +23,7 @@ action "Deploy Object Store" {
   env = {
     PROJECT_ID = "personal-workspace"
   }
-  args = ["functions deploy \"object-store-consume\" --entry-point \"obj_consume\" --memory 128MB --region us-central1 --runtime python37 --trigger-topic \"obj-ds\" --source \"/github/workspace/components/object_store\""]
+  args = ["functions deploy \"object-store-consume\" --entry-point \"obj_consume\" --memory 128MB --region us-central1 --runtime python37 --trigger-topic \"obj-ds\" --source \"/github/workspace/components/object_store\" --project \"personal-workspace\""]
 }
 
 action "Deploy Datastore Consumer" {
@@ -32,9 +32,8 @@ action "Deploy Datastore Consumer" {
   env = {
     PROJECT_ID = "personal-workspace"
   }
-  args = ["functions deploy \"datastore-consume\" --entry-point \"ds_consume\" --memory 128MB --region us-central1 --runtime python37 --trigger-topic \"datahose-ds\" --source \"./components/datastore\" "]
+  args = ["functions deploy \"datastore-consume\" --entry-point \"ds_consume\" --memory 128MB --region us-central1 --runtime python37 --trigger-topic \"datahose-ds\" --source \"./components/datastore\" --project \"personal-workspace\""]
 }
-
 
 action "Deploy Dispatcher" {
   needs = ["Deploy Object Store", "Deploy Datastore Consumer"]
@@ -42,5 +41,5 @@ action "Deploy Dispatcher" {
   env = {
     PROJECT_ID = "personal-workspace"
   }
-  args = ["functions deploy datahose --entry-point dispatch --memory 128MB --region us-central1 --runtime python37 --trigger-http --source ./components/dispatch"]
+  args = ["functions deploy datahose --entry-point dispatch --memory 128MB --region us-central1 --runtime python37 --trigger-http --source ./components/dispatch --project \"personal-workspace\""]
 }
