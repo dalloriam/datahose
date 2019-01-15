@@ -44,18 +44,18 @@ class EventSchema(Schema):
         return Event(**data)
 
 
-def fetch_mappings() -> dict:
-    bucket_name = os.environ.get('BUCKET_NAME')
+def fetch_config() -> dict:
+    bucket_name = os.environ.get('CONFIG_BUCKET_NAME')
     storage_client = storage.Client()
 
     bucket = storage_client.get_bucket(bucket_name)
-    mapping_blob = bucket.get_blob('dispatch_mappings.json')
-    mappings = json.loads(mapping_blob.download_as_string())
+    config_blob = bucket.get_blob('services/datahose.json')
+    config = json.loads(config_blob.download_as_string())
 
-    return mappings
+    return config
 
 
-mappings = fetch_mappings()
+config = fetch_config()
 publisher: pubsub_v1.PublisherClient = pubsub_v1.PublisherClient()
 
 
@@ -68,8 +68,9 @@ def dispatch(request):
         Response object using
         `make_response <http://flask.pocoo.org/docs/0.12/api/#flask.Flask.make_response>`.
     """
-    secret = os.environ.get('SECRET', 'secret')
     project_name = os.environ.get('PROJECT_NAME')
+    secret = config['host_information']['password']
+    mappings = config['topic_mappings']
 
     client = error_reporting.Client()
     try:
