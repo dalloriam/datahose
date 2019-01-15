@@ -41,7 +41,7 @@ action "Deploy Notifier" {
   env = {
     PROJECT_ID = "personal-workspace"
   }
-  args = ["functions deploy \"telegram-notifier\" --entry-point \"telegram_send\" --memory 128MB --region us-central1 --runtime python37 --trigger-topic \"notifications\" --source \"./components/telegram\" --project \"personal-workspace\""]
+  args = ["functions deploy \"telegram-consume\" --entry-point \"telegram_send\" --memory 128MB --region us-central1 --runtime python37 --trigger-topic \"notifications\" --source \"./components/telegram\" --project \"personal-workspace\""]
 }
 
 action "Deploy Dataset Generator" {
