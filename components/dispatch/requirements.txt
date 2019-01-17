@@ -1,4 +1,4 @@
+dalloriam>=0.4.11
 google-cloud-error-reporting
 google-cloud-pubsub
-google-cloud-storage
 marshmallow

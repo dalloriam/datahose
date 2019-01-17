@@ -1,8 +1,13 @@
+from dalloriam.authentication.user import User
+from dalloriam.exceptions import AccessDenied
+
 from dataclasses import dataclass, field
 
 from flask import Response
 
-from google.cloud import error_reporting, storage, pubsub_v1
+from google.cloud import error_reporting, pubsub_v1
+
+from http import HTTPStatus
 
 from marshmallow import fields, Schema, post_load
 
@@ -29,10 +34,6 @@ class Event:
             'body': self.body
         }
 
-    @property
-    def serialized(self) -> bytes:
-        return json.dumps(self.dict).encode()
-
 
 class EventSchema(Schema):
     key = fields.Str(required=True)
@@ -44,18 +45,21 @@ class EventSchema(Schema):
         return Event(**data)
 
 
-def fetch_config() -> dict:
-    bucket_name = os.environ.get('CONFIG_BUCKET_NAME')
-    storage_client = storage.Client()
+def authenticate(auth_header: str):
+    if auth_header.startswith('Bearer'):
+        # If we use bearer token, fetch the user info directly from there.
+        return User.from_token(auth_header.split(' ').pop())
 
-    bucket = storage_client.get_bucket(bucket_name)
-    config_blob = bucket.get_blob('services/datahose.json')
-    config = json.loads(config_blob.download_as_string())
+    elif auth_header.startswith('UPW'):
+        # Custom format for passing username & password. Less secure.
+        email, password = auth_header.split(' ')[-2:]
+        uid, (id_token, refresh_token) = User.get_token(os.environ.get('FIREBASE_API_KEY'), email, password)
+        return User.from_uid(uid)
 
-    return config
+    else:
+        raise AccessDenied('Invalid header')
 
 
-config = fetch_config()
 publisher: pubsub_v1.PublisherClient = pubsub_v1.PublisherClient()
 
 
@@ -69,34 +73,36 @@ def dispatch(request):
         `make_response <http://flask.pocoo.org/docs/0.12/api/#flask.Flask.make_response>`.
     """
     project_name = os.environ.get('PROJECT_NAME')
-    secret = config['host_information']['password']
-    mappings = config['topic_mappings']
 
     client = error_reporting.Client()
     try:
         request_json = request.get_json()
 
-        if 'Authorization' in request.headers:
-            token = request.headers.get('Authorization')
-        elif 'auth' in request_json:
-            token = request_json['auth']
-            del request_json['auth']
-        else:
-            token = 'secret'
+        try:
+            user = authenticate(request.headers.get('Authorization', ''))
+        except AccessDenied as e:
+            return Response(json.dumps({'error': str(e)}), HTTPStatus.FORBIDDEN, content_type='application/json')
 
-        if token != secret:
-            return '{"error": "Forbidden"}', 403
+        if 'datahose' not in user.services:
+            return Response(
+                json.dumps({'error': 'Datahose service not configured.'}),
+                HTTPStatus.UNPROCESSABLE_ENTITY,
+                content_type='application/json'
+            )
+
+        mappings = user.services['datahose']['namespace_topic_mappings']
 
         schema = EventSchema(strict=True)
         try:
             event: Event = schema.load(request_json).data
         except Exception:
             print(f'Got bad request: [{request_json}]')
-            return '{"error": "Bad Request."}', 400
+            return '{"error": "Bad Request."}', HTTPStatus.BAD_REQUEST
 
         for topic_name in mappings.get(event.namespace, []):
             topic_path = publisher.topic_path(project_name, topic_name)
-            publisher.publish(topic_path, data=event.serialized)
+            publisher.publish(topic_path, data=json.dumps({**event.dict, 'user_id': user.uid}).encode())
+
     except Exception:
         client.report_exception()
 
