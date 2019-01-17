@@ -78,8 +78,13 @@ def dispatch(request):
     try:
         request_json = request.get_json()
 
+        if 'Authorization' in request.headers:
+            auth_str = request.headers['Authorization']
+        else:
+            auth_str = request_json.get('auth', '')
+
         try:
-            user = authenticate(request.headers.get('Authorization', ''))
+            user = authenticate(auth_str)
         except AccessDenied as e:
             return Response(json.dumps({'error': str(e)}), HTTPStatus.FORBIDDEN, content_type='application/json')
 
