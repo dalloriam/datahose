@@ -1,8 +1,8 @@
-from dalloriam.datahose import DatahoseClient
+from dalloriam.authentication.user import User
 
 from dateutil import parser
 
-from google.cloud import datastore, error_reporting, storage
+from google.cloud import datastore, error_reporting, pubsub_v1, storage
 
 from typing import Any, Dict, List, Optional
 
@@ -11,16 +11,7 @@ import json
 import os
 import pandas as pd
 
-
-def fetch_config() -> dict:
-    bucket_name = os.environ.get('CONFIG_BUCKET_NAME')
-    storage_client = storage.Client()
-
-    bucket = storage_client.get_bucket(bucket_name)
-    config_blob = bucket.get_blob('services/datahose.json')
-    config = json.loads(config_blob.download_as_string())
-
-    return config
+publisher: pubsub_v1.PublisherClient = pubsub_v1.PublisherClient()
 
 
 class DatasetUpdater:
@@ -53,7 +44,7 @@ class DatasetUpdater:
             List of keys.
         """
         query = self.ds.query(kind='__kind__')
-        return [x.key.name for x in query.fetch() if not x.key.name.startswith('_')]
+        return [x.key.name for x in query.fetch() if x.key.name.startswith('Event')]
 
     def _fetch_hits(self, kind: str, time_since_last_event: Optional[float]) -> List[Dict[str, Any]]:
         query = self.ds.query(kind=kind)
@@ -115,37 +106,33 @@ class DatasetUpdater:
         }
 
 
-def dispatch_update_results(update_results: Dict[str, int], host: str, password: str) -> None:
+def dispatch_update_results(update_results: Dict[str, int]) -> None:
     stats_lst = [f'  - `{event_key}`: {val}' for event_key, val in update_results.items() if val != 0]
 
     if not stats_lst:
         return
 
-    datahose = DatahoseClient(
-        service_host=host,
-        password=password
-    )
-    datahose.notify(
-        sender="Event Report",
-        message='Since last report: \n\n' + '\n'.join(stats_lst)
-    )
+    project_name = os.environ.get('PROJECT_NAME')
+    topic_path = publisher.topic_path(project_name, 'notifications')
+    publisher.publish(topic_path, data=json.dumps({  # TODO: Find a way to fetch topic dynamically
+        'key': 'notification.reports',
+        'body': {
+            'sender': 'Event Report',
+            'message': 'Since last report: \n\n' + '\n'.join(stats_lst)
+        }
+    }).encode())
 
 
 def generate_dataset(event, context):
-    config = fetch_config()
     project_name = os.environ.get('PROJECT_NAME')
-    bucket_name = config['buckets']['datasets']
+    bucket_name = os.environ.get('DATASET_BUCKET_NAME')
 
     client = error_reporting.Client()
 
     try:
         updater = DatasetUpdater(project_name, bucket_name)
         update_results = updater.update_datasets()
-        dispatch_update_results(
-            update_results,
-            config['host_information']['host'],
-            config['host_information']['password']
-        )
+        dispatch_update_results(update_results)
     except Exception:
         client.report_exception()
 
