@@ -50,7 +50,8 @@ def test_dataset_updater_try_load_dataset(path_exists: bool, expected_dataset: O
     [
         ([], []),
         (['_hello'], []),
-        (['a', '_hello', 'b'], ['a', 'b'])
+        (['Event-hello', 'hello'], ['Event-hello']),
+        (['Event-a', '_hello', 'Event-b'], ['Event-a', 'Event-b'])
     ]
 )
 def test_dataset_updater_fetch_all_kinds(query_keys: List[str], expected_kinds: List[str]):

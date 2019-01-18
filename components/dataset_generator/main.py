@@ -1,8 +1,6 @@
-from dalloriam.authentication.user import User
-
 from dateutil import parser
 
-from google.cloud import datastore, error_reporting, pubsub_v1, storage
+from google.cloud import datastore, error_reporting, pubsub_v1
 
 from typing import Any, Dict, List, Optional
 
@@ -10,8 +8,6 @@ import gcsfs
 import json
 import os
 import pandas as pd
-
-publisher: pubsub_v1.PublisherClient = pubsub_v1.PublisherClient()
 
 
 class DatasetUpdater:
@@ -111,6 +107,8 @@ def dispatch_update_results(update_results: Dict[str, int]) -> None:
 
     if not stats_lst:
         return
+
+    publisher: pubsub_v1.PublisherClient = pubsub_v1.PublisherClient()
 
     project_name = os.environ.get('PROJECT_NAME')
     topic_path = publisher.topic_path(project_name, 'notifications')
