@@ -21,9 +21,14 @@ def ds_consume(event, context):
         key = ds.key(f'Event-{evt["key"]}')
 
         entity = datastore.Entity(key=key)
-        entity.update({**evt['body'], 'key': evt['key'], 'time': datetime.fromtimestamp(evt['time'])})
+        entity.update({
+            **evt['body'],
+            'key': evt['key'],
+            'time': datetime.fromtimestamp(evt['time']),
+            'dh_user_id': evt['user_id']
+        })
         ds.put(entity)
 
-        print(f'Processed event  [{evt["key"]}].')
+        print(f'Processed event  [{evt["key"]}] for user [{evt["user_id"]}].')
     except Exception:
         client.report_exception()

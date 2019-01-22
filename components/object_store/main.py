@@ -20,7 +20,7 @@ def obj_consume(event, context):
 
         evt = json.loads(base64.b64decode(event['data']).decode('utf-8'))
 
-        obj_id = evt['key'].split('.', 1)[-1]
+        obj_id = f"{evt['usr_id']}/{evt['key'].split('.', 1)[-1]}"
 
         bucket = storage_client.get_bucket(bucket_name)
         bucket.blob(obj_id).upload_from_string(
