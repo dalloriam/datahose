@@ -54,7 +54,7 @@ action "Deploy Notifier" {
 }
 
 action "Deploy Dispatcher" {
-  needs = ["Deploy Object Store", "Deploy Datastore Consumer", "Deploy Notifier", "Deploy Bigquery Consumer"]
+  needs = ["Deploy Object Store", "Deploy Reports Generator", "Deploy Notifier", "Deploy Bigquery Consumer"]
   uses = "actions/gcloud/cli@master"
   env = {
     PROJECT_ID = "personal-workspace"
