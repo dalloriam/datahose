@@ -35,6 +35,15 @@ action "Deploy Datastore Consumer" {
   args = ["functions deploy \"datastore-consume\" --entry-point \"ds_consume\" --memory 128MB --region us-central1 --runtime python37 --trigger-topic \"datahose-ds\" --source \"./components/datastore\" --project \"personal-workspace\""]
 }
 
+action "Deploy Bigquery Consumer" {
+    needs = ["Run Tests", "Initialize GCP"]
+    uses = "actions/gcloud/cli@master"
+    env = {
+        "PROJECT_ID" = "personal-workspace"
+    }
+    args = ["functions deploy \"bigquery-consume\" --entry-point \"bq_consume\" --memory 128MB --region us-central1 --runtime python37 --trigger-topic \"datahose-bq\" --source \"./components/bigquery\" --project \"personal-workspace\""]
+}
+
 action "Deploy Notifier" {
   needs = ["Run Tests", "Initialize GCP"]
   uses = "actions/gcloud/cli@master"
@@ -44,17 +53,8 @@ action "Deploy Notifier" {
   args = ["functions deploy \"telegram-consume\" --entry-point \"telegram_send\" --memory 128MB --region us-central1 --runtime python37 --trigger-topic \"notifications\" --source \"./components/telegram\" --project \"personal-workspace\""]
 }
 
-action "Deploy Dataset Generator" {
-  needs = ["Run Tests", "Initialize GCP"]
-  uses = "actions/gcloud/cli@master"
-  env = {
-    PROJECT_ID = "personal-workspace"
-  }
-  args = ["functions deploy \"dataset-gen\" --entry-point \"generate_dataset\" --memory 128MB --region us-central1 --runtime python37 --trigger-topic \"datasets\" --source \"./components/dataset_generator\" --project \"personal-workspace\""]
-}
-
 action "Deploy Dispatcher" {
-  needs = ["Deploy Object Store", "Deploy Datastore Consumer", "Deploy Notifier", "Deploy Dataset Generator"]
+  needs = ["Deploy Object Store", "Deploy Datastore Consumer", "Deploy Notifier", "Deploy Bigquery Consumer"]
   uses = "actions/gcloud/cli@master"
   env = {
     PROJECT_ID = "personal-workspace"
