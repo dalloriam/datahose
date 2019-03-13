@@ -16,7 +16,7 @@ def get_statistics() -> Dict[str, Dict[str, int]]:
     query_job = bq.query("SELECT user_id, key, COUNT(*) as count FROM datahose.events "
                          "WHERE time >= DATETIME_SUB(CURRENT_DATETIME(), INTERVAL 24 HOUR) GROUP BY user_id, key;")
 
-    statistics = defaultdict(lambda: {})
+    statistics = defaultdict(dict)
 
     for row in query_job:
         statistics[row.user_id][row.key] = row.count
